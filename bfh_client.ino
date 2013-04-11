@@ -44,7 +44,8 @@ unsigned long lastConnectionTime = 0;  // last time you connected to the server,
 boolean lastConnected = false;  // state of the connection last time through the main loop
 
 
-char data[64]; //buffer for data
+char data[100]; //buffer for data
+char dataJSON[100]; 
 
 unsigned int i = 0; //number of updates
 
@@ -125,6 +126,7 @@ void loop() {
   printSerial();
 
   sprintf(data,"updates,%d\nlight,%d\ntemperature,%d\nhumidity,%d\nvoltage,%d",i,light,(int)celsius,(int)humidityPercentage,voltage);
+  sprintf(dataJSON,"{\"updates\":%d,\"light\":%d,\"temperature\":%d,\"humidity\":%d,\"voltage\":%d}",i,light,(int)celsius,(int)humidityPercentage,voltage);
 
   // if there's incoming data from the net connection.
   // send it out the serial port.  This is for debugging
@@ -145,8 +147,8 @@ void loop() {
   // if you're not connected, and ten seconds have passed since
   // your last connection, then connect again and send data:
   if(!client.connected()) {
-    sendData(SERVERHOST, SERVERPATH, SERVERAPIKEY, data);
-    sendData(COSMHOST, COSMPATH, COSMAPIKEY, data);
+    sendData(SERVERHOST, SERVERPATH, SERVERAPIKEY, "application/json", dataJSON);
+    sendData(COSMHOST, COSMPATH, COSMAPIKEY, "text/cvs", data);
    
   }
   // store the state of the connection for next time through
@@ -187,7 +189,7 @@ void printSerial() {
 
 
 // this method makes a HTTP connection to the server:
-void sendData(char *host, char *path, char *apikey, char *data) {
+void sendData(char *host, char *path, char *apikey, char *contentype, char *data) {
   // if there's a successful connection:
   if (client.connect(host, 80)) {
     Serial.println("connecting...");
@@ -205,7 +207,9 @@ void sendData(char *host, char *path, char *apikey, char *data) {
     client.println(strlen(data));
 
     // last pieces of the HTTP PUT request:
-    client.println("Content-Type: text/csv");
+    client.print("Content-Type: ");
+    client.println(contentype);
+    
     client.println("Connection: close");
     client.println();
     
@@ -225,7 +229,6 @@ void sendData(char *host, char *path, char *apikey, char *data) {
    // note the time that the connection was made or attempted:
   lastConnectionTime = millis();
 }
-
 
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
