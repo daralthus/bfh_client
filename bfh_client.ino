@@ -76,6 +76,8 @@ void setup() {
     ; // wait for serial port to connect. Needed for Leonardo only
   // }
   
+  Wire.begin();
+  
   // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present"); 
